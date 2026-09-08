@@ -49,21 +49,18 @@ sudo frps-admin
 Console preview:
 
 ```text
-============================================================
-             FRPS 服务管理面板 / Management Console         
-============================================================
+  FRPS 管理面板 / Management Console
   状态 / Status: 运行中 / Running (Active)
-------------------------------------------------------------
+
   1. 启动服务 / Start Service
   2. 重启服务 / Restart Service
   3. 停止服务 / Stop Service
-  4. 查看实时日志 / View Recent Logs
-  5. 查看配置文件 / View Configuration File
-  6. 修改配置文件 / Edit Configuration File
-  7. 重新安装与更新 / Reinstall or Update FRPS
-  8. 卸载 FRPS / Uninstall FRPS
-  0. 退出 / Exit
-============================================================
+  4. 实时日志 / View Recent Logs
+  5. 查看配置 / View Configuration File
+  6. 修改配置 / Edit Configuration File
+  7. 重装更新 / Reinstall or Update FRPS
+  8. 彻底卸载 / Uninstall FRPS
+  0. 退出面板 / Exit
 ```
 
 ---
