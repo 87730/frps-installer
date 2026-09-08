@@ -1,52 +1,124 @@
-# 一键命令
-```
-sudo wget https://raw.githubusercontent.com/87730/frps_installe/main/frps.sh && sudo chmod +x frps.sh && sudo ./frps.sh
-```
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+# frps-installer
 
-一键安装和管理FRP服务端的脚本
-支持多种Linux发行版
-Debian/Ubuntu/CentOS等
+A lightweight, automated FRP server (frps) installer and system service manager for Linux.
 
-## 功能特点
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+[![Shell: Bash](https://img.shields.io/badge/Shell-Bash-green.svg)](https://www.gnu.org/software/bash/)
 
-- 自动检测系统架构和发行版
-- 下载最新版FRP服务端
-- 自动配置systemd服务
-- 提供管理菜单（启动/停止/重启/卸载）
-- 彩色状态显示（运行中/已停止/未安装）
-- 彻底卸载功能
+---
 
-## 支持的系统
+## Features
 
-- Debian
-- Ubuntu
-- CentOS
-- Fedora
-- openSUSE
-- Arch Linux
+- **Automated Architecture Detection**: Automatically detects system architecture (`amd64`, `arm64`, `arm`, `386`, `riscv64`) and downloads the matching FRP release.
+- **Dual Source Acceleration**: Automatically attempts direct download from GitHub; falls back to mirror acceleration if connection times out.
+- **Systemd Integration**: Configures, enables, and manages `frps.service` automatically.
+- **Secure Default Configuration**: Auto-generates `frps.toml` with a secure random authentication token.
+- **Interactive Management Console**: Simple numeric menu for status inspection, starting, stopping, restarting, log viewing, and uninstallation.
+- **Clean Command Line Shortcut**: Automatically registers `frps-admin` for convenient service management.
+- **Zero Emoji Style**: Clean, standard UNIX terminal output.
 
-# 管理菜单如果系统已安装FRPS，运行脚本将显示管理菜单：
-```
-==============================
-      FRPS 服务管理菜单       
-==============================
-🟢 FRPS 状态: 运行中
+---
 
-1. 启动服务 (服务已运行)
-2. 重启服务
-3. 停止服务
-4. 卸载 FRPS
-5. 退出
-==============================
-```
+## One-Click Installation
 
-卸载
-
-通过管理菜单选择卸载选项，或手动运行：
+Run the following command on your server:
 
 ```bash
-systemctl stop frps
-systemctl disable frps
-rm /etc/systemd/system/frps.service
-rm /path/to/frps /path/to/frps.toml  # 根据安装路径
+curl -fsSL https://raw.githubusercontent.com/87730/frps-installer/main/frps.sh | sudo bash
+```
+
+Alternatively, with `wget`:
+
+```bash
+wget -qO- https://raw.githubusercontent.com/87730/frps-installer/main/frps.sh | sudo bash
+```
+
+---
+
+## Management Console
+
+Once installed, manage your FRPS service at any time by running:
+
+```bash
+sudo frps-admin
+```
+
+This launches the interactive menu:
+
+```text
+============================================================
+                  FRPS Management Console                   
+============================================================
+  Status: Running (Active)
+------------------------------------------------------------
+  1. Start Service
+  2. Restart Service
+  3. Stop Service
+  4. View Recent Logs
+  5. View Configuration File
+  6. Reinstall / Update FRPS
+  7. Uninstall FRPS
+  0. Exit
+============================================================
+```
+
+---
+
+## Non-Interactive CLI Shortcuts
+
+You can also pass arguments directly to the script or `frps-admin`:
+
+```bash
+sudo frps-admin start       # Start the service
+sudo frps-admin stop        # Stop the service
+sudo frps-admin restart     # Restart the service
+sudo frps-admin status      # Show current status
+sudo frps-admin logs        # Stream recent logs
+sudo frps-admin config      # Output current configuration
+sudo frps-admin uninstall   # Uninstall FRPS
+```
+
+---
+
+## File Structure
+
+| Component | Path | Description |
+| :--- | :--- | :--- |
+| **Binary** | `/usr/local/bin/frps` | FRPS executable binary |
+| **Configuration** | `/etc/frp/frps.toml` | Main configuration file (port, token, etc.) |
+| **Systemd Service** | `/etc/systemd/system/frps.service` | System service daemon configuration |
+| **Management Tool** | `/usr/local/bin/frps-admin` | Interactive management CLI shortcut |
+
+---
+
+## Network & Firewall Configuration
+
+By default, FRPS listens on TCP port `7000`. Ensure that your firewall or cloud provider security group allows inbound traffic on this port:
+
+```bash
+# UFW (Ubuntu / Debian)
+sudo ufw allow 7000/tcp
+
+# Firewalld (CentOS / Alma / Rocky / Fedora)
+sudo firewall-cmd --zone=public --add-port=7000/tcp --permanent
+sudo firewall-cmd --reload
+```
+
+---
+
+## Supported Operating Systems
+
+- Ubuntu (18.04+)
+- Debian (10+)
+- CentOS / RHEL (7+)
+- AlmaLinux / Rocky Linux
+- Fedora
+- Arch Linux
+- openSUSE
+- Alpine Linux
+
+---
+
+## License
+
+This project is open source and available under the [MIT License](LICENSE).
