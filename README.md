@@ -11,7 +11,7 @@ FRP 服务端 (frps) 一键安装与系统服务管理脚本。
 
 ## 项目特性
 
-- **始终安装最新版本**：自动通过官方 Release 重定向动态解析获取最新的 FRP 版本，不受 GitHub API 匿名访问频次限制。
+- **始终安装最新版本**：自动通过官方 Release 重定向动态解析获取最新 FRP 版本，不受 GitHub API 匿名访问频次限制。
 - **架构自适应**：自动识别系统 CPU 架构（`amd64`、`arm64`、`arm`、`386`、`riscv64`），拉取对应的官方二进制包。
 - **国内外双源加速**：优先直连 GitHub 官方源；若检测到国内 VPS 网络超时，自动平滑切换至镜像加速节点下载。
 - **Systemd 服务托管**：自动配置、注册并启用 `frps.service` 系统守护进程，支持开机自启与崩溃自动重启。
@@ -49,21 +49,18 @@ sudo frps-admin
 管理面板预览：
 
 ```text
-============================================================
-             FRPS 服务管理面板 / Management Console         
-============================================================
+  FRPS 管理面板 / Management Console
   状态 / Status: 运行中 / Running (Active)
-------------------------------------------------------------
+
   1. 启动服务 / Start Service
   2. 重启服务 / Restart Service
   3. 停止服务 / Stop Service
-  4. 查看实时日志 / View Recent Logs
-  5. 查看配置文件 / View Configuration File
-  6. 修改配置文件 / Edit Configuration File
-  7. 重新安装与更新 / Reinstall or Update FRPS
-  8. 卸载 FRPS / Uninstall FRPS
-  0. 退出 / Exit
-============================================================
+  4. 实时日志 / View Recent Logs
+  5. 查看配置 / View Configuration File
+  6. 修改配置 / Edit Configuration File
+  7. 重装更新 / Reinstall or Update FRPS
+  8. 彻底卸载 / Uninstall FRPS
+  0. 退出面板 / Exit
 ```
 
 ---
