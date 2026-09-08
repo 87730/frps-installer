@@ -11,11 +11,12 @@ FRP 服务端 (frps) 一键安装与系统服务管理脚本。
 
 ## 项目特性
 
-- **架构自适应**：自动识别系统 CPU 架构（`amd64`、`arm64`、`arm`、`386`、`riscv64`），自动拉取匹配的官方二进制发布包。
+- **始终安装最新版本**：自动通过官方 Release 重定向动态解析获取最新的 FRP 版本，不受 GitHub API 匿名访问频次限制。
+- **架构自适应**：自动识别系统 CPU 架构（`amd64`、`arm64`、`arm`、`386`、`riscv64`），拉取对应的官方二进制包。
 - **国内外双源加速**：优先直连 GitHub 官方源；若检测到国内 VPS 网络超时，自动平滑切换至镜像加速节点下载。
 - **Systemd 服务托管**：自动配置、注册并启用 `frps.service` 系统守护进程，支持开机自启与崩溃自动重启。
 - **安全配置生成**：自动生成 `frps.toml` 配置文件，默认生成 16 位高强度随机通信 Token。
-- **交互式管理面板**：提供直观的数字菜单，随时查看运行状态、启动、停止、重启、查看实时日志或彻底卸载。
+- **交互式管理面板**：提供直观的数字菜单，随时查看运行状态、启动、停止、重启、在线编辑配置、查看实时日志或彻底卸载。
 - **全局管理快捷命令**：安装完成后自动注册 `frps-admin` 系统命令，无需重复下载脚本。
 - **纯净无 Emoji**：遵循专业 UNIX 终端排版规范，输出干净工整。
 
@@ -58,8 +59,9 @@ sudo frps-admin
   3. 停止服务 / Stop Service
   4. 查看实时日志 / View Recent Logs
   5. 查看配置文件 / View Configuration File
-  6. 重新安装与更新 / Reinstall or Update FRPS
-  7. 卸载 FRPS / Uninstall FRPS
+  6. 修改配置文件 / Edit Configuration File
+  7. 重新安装与更新 / Reinstall or Update FRPS
+  8. 卸载 FRPS / Uninstall FRPS
   0. 退出 / Exit
 ============================================================
 ```
@@ -77,6 +79,7 @@ sudo frps-admin restart     # 重启服务
 sudo frps-admin status      # 查看当前运行状态
 sudo frps-admin logs        # 查看实时运行日志
 sudo frps-admin config      # 查看当前配置文件内容
+sudo frps-admin edit        # 打开编辑器修改配置文件并重载
 sudo frps-admin uninstall   # 彻底卸载 FRPS
 ```
 
