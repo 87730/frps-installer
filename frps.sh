@@ -98,7 +98,7 @@ get_latest_version() {
     local ver=""
     local redirected_url
 
-    # 方式一：通过 GitHub Release 页面 302 重定向获取，不受 API 60次/小时限流限制
+    # 方式一：通过 GitHub Release 页面 302 重定向获取
     redirected_url="$(curl -fsSL -o /dev/null -w "%{url_effective}" --connect-timeout 8 https://github.com/fatedier/frp/releases/latest 2>/dev/null)"
     if [ -n "$redirected_url" ]; then
         ver="$(basename "$redirected_url" | sed -E 's/^v//')"
@@ -148,12 +148,11 @@ get_service_status() {
     fi
 }
 
-# 9. Install core logic / 核心安装流程
+# 9. Install core logic / 核心安装流程 (流派A：纯净无横线排版)
 install_frps() {
     echo ""
-    echo -e "${BLUE}------------------------------------------------------------${NC}"
-    echo -e "${CYAN}        开始安装 FRPS 服务端 / Starting FRPS Installation   ${NC}"
-    echo -e "${BLUE}------------------------------------------------------------${NC}"
+    echo -e "${CYAN}  FRPS 服务端安装 / Starting FRPS Installation${NC}"
+    echo ""
 
     install_dependencies
 
@@ -253,11 +252,10 @@ LimitNOFILE=1048576
 WantedBy=multi-user.target
 EOF
 
-    # 注册系统全局管理快捷命令 (防管道执行时 $0 指向 bash 的问题)
+    # 注册系统全局管理快捷命令
     if [ -f "$0" ] && [ "$0" != "bash" ] && [ "$0" != "-bash" ] && [ "$0" != "sh" ]; then
         cp -f "$0" "$ADMIN_SCRIPT" 2>/dev/null || true
     else
-        # 管道安装场景：直接将脚本文件下载并保存到 /usr/local/bin/frps-admin
         if ! curl -fsSL --connect-timeout 8 "$RAW_SCRIPT_URL" -o "$ADMIN_SCRIPT" 2>/dev/null; then
             curl -fsSL --connect-timeout 10 "$MIRROR_SCRIPT_URL" -o "$ADMIN_SCRIPT" 2>/dev/null || true
         fi
@@ -278,25 +276,21 @@ EOF
     rm -rf "$TMP_DIR"
 
     echo ""
-    echo -e "${GREEN}============================================================${NC}"
-    echo -e "${GREEN}          FRPS 安装完成 / Installation Completed           ${NC}"
-    echo -e "${GREEN}============================================================${NC}"
+    echo -e "${GREEN}  FRPS 安装完成 / Installation Completed${NC}"
     echo "  核心程序 / Binary Path : $FRPS_BIN"
     echo "  配置文件 / Config File : $CONFIG_FILE"
     echo "  服务端口 / Port        : 7000 (请在安全组及防火墙放行该端口)"
     echo "  管理命令 / Admin CLI   : frps-admin"
-    echo "============================================================"
     echo ""
 }
 
 # 10. Uninstall logic / 卸载逻辑
 uninstall_frps() {
     echo ""
-    echo -e "${YELLOW}------------------------------------------------------------${NC}"
-    echo -e "${RED}             卸载 FRPS / Uninstalling FRPS                  ${NC}"
-    echo -e "${YELLOW}------------------------------------------------------------${NC}"
+    echo -e "${RED}  卸载 FRPS / Uninstalling FRPS${NC}"
+    echo ""
 
-    read -rp "确认彻底卸载 FRPS 吗？/ Are you sure to uninstall? (y/N): " confirm
+    read -rp "  确认彻底卸载 FRPS 吗？/ Are you sure to uninstall? (y/N): " confirm
     if [[ ! "$confirm" =~ ^[yY]$ ]]; then
         msg_info "取消卸载。 / Uninstallation canceled."
         return 0
@@ -324,7 +318,7 @@ uninstall_frps() {
     fi
 
     if [ -d "$CONFIG_DIR" ]; then
-        read -rp "是否删除配置目录与数据 / Remove config dir ($CONFIG_DIR)? (y/N): " del_conf
+        read -rp "  是否删除配置目录与数据 / Remove config dir ($CONFIG_DIR)? (y/N): " del_conf
         if [[ "$del_conf" =~ ^[yY]$ ]]; then
             rm -rf "$CONFIG_DIR"
             msg_ok "配置目录已清除 / Configuration removed: $CONFIG_DIR"
@@ -333,7 +327,9 @@ uninstall_frps() {
         fi
     fi
 
+    echo ""
     msg_ok "FRPS 已从系统中彻底卸载。 / FRPS uninstalled successfully."
+    echo ""
 }
 
 # 11. Service control functions / 服务控制函数
@@ -367,9 +363,10 @@ view_logs() {
 
 view_config() {
     if [ -f "$CONFIG_FILE" ]; then
-        echo -e "${CYAN}--- 配置文件内容 / Config Content ($CONFIG_FILE) ---${NC}"
+        echo ""
+        echo -e "${CYAN}  配置文件内容 / Config Content ($CONFIG_FILE):${NC}"
         cat "$CONFIG_FILE"
-        echo -e "${CYAN}-----------------------------------------------------${NC}"
+        echo ""
     else
         msg_err "未找到配置文件 / Config file not found: $CONFIG_FILE"
     fi
@@ -391,33 +388,32 @@ edit_config() {
     msg_info "正在使用 $editor 编辑配置文件... / Opening config with $editor..."
     "$editor" "$CONFIG_FILE"
 
-    read -rp "配置已修改，是否重启 FRPS 服务以生效？/ Restart service now? (Y/n): " restart_confirm
+    echo ""
+    read -rp "  配置已修改，是否重启 FRPS 服务以生效？/ Restart service now? (Y/n): " restart_confirm
     if [[ ! "$restart_confirm" =~ ^[nN]$ ]]; then
         restart_service
     fi
 }
 
-# 12. Interactive management menu / 交互式管理菜单
+# 12. Interactive management menu / 交互式管理菜单 (流派A：极简空行排版，绝不折行)
 show_menu() {
     while true; do
         echo ""
-        echo -e "${BLUE}============================================================${NC}"
-        echo -e "${CYAN}             FRPS 服务管理面板 / Management Console         ${NC}"
-        echo -e "${BLUE}============================================================${NC}"
+        echo -e "${CYAN}  FRPS 管理面板 / Management Console${NC}"
         echo -n "  状态 / Status: "
         get_service_status
-        echo -e "${BLUE}------------------------------------------------------------${NC}"
+        echo ""
         echo "  1. 启动服务 / Start Service"
         echo "  2. 重启服务 / Restart Service"
         echo "  3. 停止服务 / Stop Service"
-        echo "  4. 查看实时日志 / View Recent Logs"
-        echo "  5. 查看配置文件 / View Configuration File"
-        echo "  6. 修改配置文件 / Edit Configuration File"
-        echo "  7. 重新安装与更新 / Reinstall or Update FRPS"
-        echo "  8. 卸载 FRPS / Uninstall FRPS"
-        echo "  0. 退出 / Exit"
-        echo -e "${BLUE}============================================================${NC}"
-        read -rp "请选择操作 / Please select an option [0-8]: " choice
+        echo "  4. 实时日志 / View Recent Logs"
+        echo "  5. 查看配置 / View Configuration File"
+        echo "  6. 修改配置 / Edit Configuration File"
+        echo "  7. 重装更新 / Reinstall or Update FRPS"
+        echo "  8. 彻底卸载 / Uninstall FRPS"
+        echo "  0. 退出面板 / Exit"
+        echo ""
+        read -rp "  请选择操作 / Select option [0-8]: " choice
 
         case "$choice" in
             1) start_service ;;
