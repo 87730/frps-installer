@@ -2,12 +2,13 @@
 # ============================================================
 # Project: frps-installer
 # Description: FRP server one-click installer and service manager
+#              FRP 服务端一键安装与系统服务管理脚本
 # Repository: https://github.com/87730/frps-installer
 # ============================================================
 
 set -o pipefail
 
-# 1. Paths & Constants
+# 1. Paths & Constants / 路径与常量
 FRPS_BIN="/usr/local/bin/frps"
 CONFIG_DIR="/etc/frp"
 CONFIG_FILE="/etc/frp/frps.toml"
@@ -15,7 +16,7 @@ SERVICE_FILE="/etc/systemd/system/frps.service"
 ADMIN_SCRIPT="/usr/local/bin/frps-admin"
 TMP_DIR="/tmp/frps-installer"
 
-# 2. Colors & Prefixes
+# 2. Colors & Prefixes / 颜色与前缀定义
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[0;33m'
@@ -28,22 +29,22 @@ msg_ok()    { echo -e "${GREEN}[OK]${NC} $*"; }
 msg_warn()  { echo -e "${YELLOW}[WARN]${NC} $*"; }
 msg_err()   { echo -e "${RED}[ERROR]${NC} $*"; }
 
-# 3. Root check
+# 3. Root check / 权限检查
 check_root() {
     if [ "$(id -u)" -ne 0 ]; then
         if command -v sudo >/dev/null 2>&1; then
-            msg_info "Non-root user detected. Escalating via sudo..."
+            msg_info "检测到非 root 用户，尝试通过 sudo 提权... / Non-root user detected. Escalating via sudo..."
             exec sudo bash "$0" "$@"
         else
-            msg_err "This script requires root privileges. Please run as root or install sudo."
+            msg_err "此脚本需要 root 权限，请以 root 身份运行或安装 sudo。 / This script requires root privileges."
             exit 1
         fi
     fi
 }
 
-# 4. Dependency installation
+# 4. Dependency installation / 安装必要依赖
 install_dependencies() {
-    msg_info "Checking necessary dependencies..."
+    msg_info "检查系统依赖环境... / Checking system dependencies..."
     local deps=("curl" "tar" "wget")
     local needed=()
 
@@ -57,7 +58,7 @@ install_dependencies() {
         return 0
     fi
 
-    msg_info "Installing missing dependencies: ${needed[*]}"
+    msg_info "正在安装缺失依赖: ${needed[*]} / Installing dependencies..."
     if command -v apt-get >/dev/null 2>&1; then
         apt-get update -y && apt-get install -y "${needed[@]}"
     elif command -v dnf >/dev/null 2>&1; then
@@ -71,11 +72,11 @@ install_dependencies() {
     elif command -v apk >/dev/null 2>&1; then
         apk add --no-cache "${needed[@]}"
     else
-        msg_warn "Package manager not identified. Please ensure curl, tar, and wget are installed."
+        msg_warn "未能识别包管理器，请确保 curl、tar 和 wget 已安装。 / Please ensure curl, tar, and wget are installed."
     fi
 }
 
-# 5. Architecture detection
+# 5. Architecture detection / 架构检测
 detect_arch() {
     local raw_arch
     raw_arch="$(uname -m)"
@@ -90,18 +91,17 @@ detect_arch() {
     esac
 }
 
-# 6. Version detection
+# 6. Version detection / 获取最新版本号
 get_latest_version() {
     local ver
     ver="$(curl -sSL --connect-timeout 8 https://api.github.com/repos/fatedier/frp/releases/latest 2>/dev/null | grep '"tag_name":' | sed -E 's/.*"v?([^"]+)".*/\1/')"
     if [ -z "$ver" ]; then
-        # Fallback version if API limit reached or network blocked
         ver="0.61.1"
     fi
     echo "$ver"
 }
 
-# 7. Check if installed
+# 7. Check if installed / 检查是否已安装
 is_installed() {
     if [ -f "$FRPS_BIN" ] && [ -f "$SERVICE_FILE" ]; then
         return 0
@@ -109,27 +109,27 @@ is_installed() {
     return 1
 }
 
-# 8. Status display
+# 8. Status display / 获取服务运行状态
 get_service_status() {
     if ! command -v systemctl >/dev/null 2>&1; then
-        echo -e "${YELLOW}systemd not available${NC}"
+        echo -e "${YELLOW}systemd 不可用 / systemd not available${NC}"
         return
     fi
 
     if systemctl is-active --quiet frps; then
-        echo -e "${GREEN}Running (Active)${NC}"
+        echo -e "${GREEN}运行中 / Running (Active)${NC}"
     elif [ -f "$SERVICE_FILE" ]; then
-        echo -e "${YELLOW}Stopped (Inactive)${NC}"
+        echo -e "${YELLOW}已停止 / Stopped (Inactive)${NC}"
     else
-        echo -e "${RED}Not installed${NC}"
+        echo -e "${RED}未安装 / Not installed${NC}"
     fi
 }
 
-# 9. Install core logic
+# 9. Install core logic / 核心安装流程
 install_frps() {
     echo ""
     echo -e "${BLUE}------------------------------------------------------------${NC}"
-    echo -e "${CYAN}             FRPS Installation Process                      ${NC}"
+    echo -e "${CYAN}        开始安装 FRPS 服务端 / Starting FRPS Installation   ${NC}"
     echo -e "${BLUE}------------------------------------------------------------${NC}"
 
     install_dependencies
@@ -137,15 +137,15 @@ install_frps() {
     local arch
     arch="$(detect_arch)"
     if [ "$arch" = "unsupported" ]; then
-        msg_err "Unsupported CPU architecture: $(uname -m)"
+        msg_err "不支持的系统架构 / Unsupported CPU architecture: $(uname -m)"
         exit 1
     fi
-    msg_info "Detected architecture: $arch"
+    msg_info "检测到硬件架构 / Detected architecture: $arch"
 
-    msg_info "Fetching latest FRP version..."
+    msg_info "获取 FRP 最新版本信息 / Fetching latest FRP version..."
     local version
     version="$(get_latest_version)"
-    msg_info "Target FRP version: v$version"
+    msg_info "目标版本 / Target FRP version: v$version"
 
     local archive_name="frp_${version}_linux_${arch}.tar.gz"
     local dl_url="https://github.com/fatedier/frp/releases/download/v${version}/${archive_name}"
@@ -155,63 +155,63 @@ install_frps() {
     mkdir -p "$TMP_DIR"
     cd "$TMP_DIR" || exit 1
 
-    msg_info "Downloading FRP binary package..."
+    msg_info "下载 FRP 二进制压缩包 / Downloading FRP binary package..."
     if ! curl -fL --connect-timeout 10 --retry 2 "$dl_url" -o "$archive_name"; then
-        msg_warn "Direct download from GitHub failed or timed out. Trying mirror acceleration..."
+        msg_warn "官方源下载超时，正在尝试国内镜像加速 / Retrying with mirror acceleration..."
         if ! curl -fL --connect-timeout 15 --retry 2 "$mirror_url" -o "$archive_name"; then
-            msg_err "Failed to download frp package from both official and mirror sources."
+            msg_err "官方源及加速源均下载失败，请检查网络连接 / Download failed from all sources."
             rm -rf "$TMP_DIR"
             exit 1
         fi
     fi
 
-    msg_info "Extracting package..."
+    msg_info "解压二进制文件 / Extracting package..."
     tar -zxf "$archive_name"
     local extracted_dir="frp_${version}_linux_${arch}"
     if [ ! -d "$extracted_dir" ]; then
-        msg_err "Extraction failed: directory $extracted_dir not found."
+        msg_err "解压失败，未找到目录 / Extraction failed: $extracted_dir not found."
         rm -rf "$TMP_DIR"
         exit 1
     fi
 
-    # Install binary
-    msg_info "Installing binary to $FRPS_BIN..."
+    # 安装二进制文件
+    msg_info "安装核心二进制到 / Installing binary: $FRPS_BIN..."
     cp -f "$extracted_dir/frps" "$FRPS_BIN"
     chmod +x "$FRPS_BIN"
 
-    # Setup config
+    # 初始化配置目录与默认配置
     mkdir -p "$CONFIG_DIR"
     if [ ! -f "$CONFIG_FILE" ]; then
-        msg_info "Generating default configuration at $CONFIG_FILE..."
+        msg_info "正在生成默认配置文件 / Generating default config: $CONFIG_FILE..."
         local token
         token="$(head -c 32 /dev/urandom | tr -dc 'a-zA-Z0-9' | head -c 16)"
         cat > "$CONFIG_FILE" <<EOF
 # frps configuration
-# Documentation: https://gofrp.org/docs/examples/
+# 文档 / Documentation: https://gofrp.org/docs/examples/
 
 bindPort = 7000
 
-# Authentication token for clients
+# 客户端连接认证 Token / Client authentication token
 auth.token = "${token}"
 
-# Dashboard configuration (optional)
+# 控制台仪表盘配置 (可选) / Dashboard configuration (optional)
 # webServer.addr = "0.0.0.0"
 # webServer.port = 7500
 # webServer.user = "admin"
 # webServer.password = "admin123"
 
-# Log configuration
+# 日志配置 / Log configuration
 log.to = "/var/log/frps.log"
 log.level = "info"
 log.maxDays = 3
 EOF
-        msg_ok "Configuration generated with bindPort = 7000 and auth.token = $token"
+        msg_ok "配置文件已就绪 (端口: 7000, 随机通信Token: $token)"
     else
-        msg_info "Existing configuration found at $CONFIG_FILE (preserved)."
+        msg_info "检测到已存在配置文件，保持原配置不变 / Existing config preserved."
     fi
 
-    # Setup systemd service
-    msg_info "Configuring systemd service ($SERVICE_FILE)..."
+    # 配置 systemd 服务守护进程
+    msg_info "配置 systemd 服务守护进程 / Configuring systemd service..."
     cat > "$SERVICE_FILE" <<EOF
 [Unit]
 Description=FRP Server Daemon
@@ -230,7 +230,7 @@ LimitNOFILE=1048576
 WantedBy=multi-user.target
 EOF
 
-    # Setup management command shortcut
+    # 注册系统全局管理命令快捷方式
     cp -f "$0" "$ADMIN_SCRIPT" 2>/dev/null || true
     chmod +x "$ADMIN_SCRIPT" 2>/dev/null || true
 
@@ -238,55 +238,55 @@ EOF
         systemctl daemon-reload
         systemctl enable frps >/dev/null 2>&1
         systemctl restart frps
-        msg_ok "FRPS service enabled and started successfully!"
+        msg_ok "FRPS 服务已启动并设置开机自启 / Service enabled and started!"
     else
-        msg_warn "systemd not available in this environment. Please start manually:"
+        msg_warn "当前环境不支持 systemd，请手动运行 / Please start manually:"
         msg_warn "  $FRPS_BIN -c $CONFIG_FILE &"
     fi
 
-    # Cleanup
+    # 清理临时下载文件
     rm -rf "$TMP_DIR"
 
     echo ""
     echo -e "${GREEN}============================================================${NC}"
-    echo -e "${GREEN}             Installation Completed Successfully           ${NC}"
+    echo -e "${GREEN}          FRPS 安装完成 / Installation Completed           ${NC}"
     echo -e "${GREEN}============================================================${NC}"
-    echo "  Binary Path    : $FRPS_BIN"
-    echo "  Config File    : $CONFIG_FILE"
-    echo "  Default Port   : 7000 (Please ensure port 7000 is open in firewall)"
-    echo "  Admin Command  : frps-admin"
+    echo "  核心程序 / Binary Path : $FRPS_BIN"
+    echo "  配置文件 / Config File : $CONFIG_FILE"
+    echo "  服务端口 / Port        : 7000 (请在安全组及防火墙放行该端口)"
+    echo "  管理命令 / Admin CLI   : frps-admin"
     echo "============================================================"
     echo ""
 }
 
-# 10. Uninstall logic
+# 10. Uninstall logic / 卸载逻辑
 uninstall_frps() {
     echo ""
     echo -e "${YELLOW}------------------------------------------------------------${NC}"
-    echo -e "${RED}             Uninstalling FRPS                              ${NC}"
+    echo -e "${RED}             卸载 FRPS / Uninstalling FRPS                  ${NC}"
     echo -e "${YELLOW}------------------------------------------------------------${NC}"
 
-    read -rp "Are you sure you want to completely uninstall FRPS? (y/N): " confirm
+    read -rp "确认彻底卸载 FRPS 吗？/ Are you sure to uninstall? (y/N): " confirm
     if [[ ! "$confirm" =~ ^[yY]$ ]]; then
-        msg_info "Uninstallation canceled."
+        msg_info "取消卸载。 / Uninstallation canceled."
         return 0
     fi
 
     if command -v systemctl >/dev/null 2>&1; then
         systemctl stop frps >/dev/null 2>&1 || true
         systemctl disable frps >/dev/null 2>&1 || true
-        msg_ok "Service stopped and disabled."
+        msg_ok "服务已停止并取消开机自启。 / Service stopped and disabled."
     fi
 
     if [ -f "$SERVICE_FILE" ]; then
         rm -f "$SERVICE_FILE"
         systemctl daemon-reload >/dev/null 2>&1 || true
-        msg_ok "Service file removed: $SERVICE_FILE"
+        msg_ok "服务文件已清理 / Service file removed: $SERVICE_FILE"
     fi
 
     if [ -f "$FRPS_BIN" ]; then
         rm -f "$FRPS_BIN"
-        msg_ok "Binary removed: $FRPS_BIN"
+        msg_ok "程序文件已清理 / Binary removed: $FRPS_BIN"
     fi
 
     if [ -f "$ADMIN_SCRIPT" ]; then
@@ -294,77 +294,77 @@ uninstall_frps() {
     fi
 
     if [ -d "$CONFIG_DIR" ]; then
-        read -rp "Remove configuration directory ($CONFIG_DIR)? (y/N): " del_conf
+        read -rp "是否删除配置目录与数据 / Remove config dir ($CONFIG_DIR)? (y/N): " del_conf
         if [[ "$del_conf" =~ ^[yY]$ ]]; then
             rm -rf "$CONFIG_DIR"
-            msg_ok "Configuration removed: $CONFIG_DIR"
+            msg_ok "配置目录已清除 / Configuration removed: $CONFIG_DIR"
         else
-            msg_info "Configuration preserved at $CONFIG_DIR"
+            msg_info "保留配置目录 / Configuration preserved: $CONFIG_DIR"
         fi
     fi
 
-    msg_ok "FRPS has been completely removed from the system."
+    msg_ok "FRPS 已从系统中彻底卸载。 / FRPS uninstalled successfully."
 }
 
-# 11. Service control functions
+# 11. Service control functions / 服务控制函数
 start_service() {
     if systemctl is-active --quiet frps; then
-        msg_warn "FRPS service is already running."
+        msg_warn "FRPS 服务已在运行中。 / Service is already running."
     else
         systemctl start frps
-        msg_ok "FRPS service started."
+        msg_ok "FRPS 服务已启动。 / Service started."
     fi
 }
 
 stop_service() {
     if ! systemctl is-active --quiet frps; then
-        msg_warn "FRPS service is already stopped."
+        msg_warn "FRPS 服务未在运行。 / Service is already stopped."
     else
         systemctl stop frps
-        msg_ok "FRPS service stopped."
+        msg_ok "FRPS 服务已停止。 / Service stopped."
     fi
 }
 
 restart_service() {
     systemctl restart frps
-    msg_ok "FRPS service restarted."
+    msg_ok "FRPS 服务已重启。 / Service restarted."
 }
 
 view_logs() {
-    msg_info "Showing recent logs (Ctrl+C to exit)..."
+    msg_info "正在输出最近日志 (按 Ctrl+C 退出) / Streaming logs (Ctrl+C to exit)..."
     journalctl -u frps -n 50 -f
 }
 
 view_config() {
     if [ -f "$CONFIG_FILE" ]; then
-        echo -e "${CYAN}--- Current Config ($CONFIG_FILE) ---${NC}"
+        echo -e "${CYAN}--- 配置文件内容 / Config Content ($CONFIG_FILE) ---${NC}"
         cat "$CONFIG_FILE"
-        echo -e "${CYAN}-----------------------------------------${NC}"
+        echo -e "${CYAN}-----------------------------------------------------${NC}"
     else
-        msg_err "Configuration file not found: $CONFIG_FILE"
+        msg_err "未找到配置文件 / Config file not found: $CONFIG_FILE"
     fi
 }
 
-# 12. Interactive management menu
+# 12. Interactive management menu / 交互式管理菜单
 show_menu() {
     while true; do
         echo ""
         echo -e "${BLUE}============================================================${NC}"
-        echo -e "${CYAN}                  FRPS Management Console                   ${NC}"
+        echo -e "${CYAN}             FRPS 服务管理面板 / Management Console         ${NC}"
         echo -e "${BLUE}============================================================${NC}"
-        echo -n "  Status: "
+        echo -n "  状态 / Status: "
         get_service_status
         echo -e "${BLUE}------------------------------------------------------------${NC}"
-        echo "  1. Start Service"
-        echo "  2. Restart Service"
-        echo "  3. Stop Service"
-        echo "  4. View Recent Logs"
-        echo "  5. View Configuration File"
-        echo "  6. Reinstall / Update FRPS"
-        echo "  7. Uninstall FRPS"
-        echo "  0. Exit"
+        echo "  1. 启动服务 / Start Service"
+        echo "  2. 重启服务 / Restart Service"
+        echo "  3. 停止服务 / Stop Service"
+        echo "  4. 查看实时日志 / View Recent Logs"
+        echo "  5. 查看配置文件 / View Configuration File"
+        echo "  6. 重新安装与更新 / Reinstall or Update FRPS"
+        echo "  7. 卸载 FRPS / Uninstall FRPS"
+        echo "  0. 退出 / Exit"
         echo -e "${BLUE}============================================================${NC}"
-        read -rp "Please select an option [0-7]: " choice
+        read -rp "请选择操作 / Please select an option [0-7]: " choice
 
         case "$choice" in
             1) start_service ;;
@@ -375,16 +375,16 @@ show_menu() {
             6) install_frps ;;
             7) uninstall_frps; break ;;
             0) exit 0 ;;
-            *) msg_warn "Invalid selection. Please enter 0-7." ;;
+            *) msg_warn "无效选项，请输入 0-7。 / Invalid selection [0-7]." ;;
         esac
     done
 }
 
-# 13. Main entry point
+# 13. Main entry point / 主入口
 main() {
     check_root
 
-    # If parameters given (non-interactive shortcuts)
+    # 非交互式参数直通
     case "$1" in
         install)   install_frps; exit 0 ;;
         uninstall) uninstall_frps; exit 0 ;;
@@ -396,7 +396,7 @@ main() {
         logs)      view_logs; exit 0 ;;
     esac
 
-    # Interactive mode: if already installed, open menu; otherwise install
+    # 交互模式：已安装则展示菜单，未安装则执行安装
     if is_installed; then
         show_menu
     else
