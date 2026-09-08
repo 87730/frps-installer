@@ -11,11 +11,12 @@ A lightweight, automated FRP server (frps) installer and system service manager 
 
 ## Features
 
+- **Always Installs Latest Version**: Automatically fetches the latest official FRP release via 302 redirect resolution without being constrained by anonymous GitHub API rate limits.
 - **Automated Architecture Detection**: Automatically detects system CPU architecture (`amd64`, `arm64`, `arm`, `386`, `riscv64`) and downloads the matching official binary release.
 - **Dual Source Acceleration**: Prioritizes direct GitHub downloads; automatically falls back to mirror acceleration if the connection times out.
 - **Systemd Service Integration**: Automatically creates, registers, and enables `frps.service` for auto-start on boot and automatic failure recovery.
 - **Secure Default Configuration**: Generates `frps.toml` with a secure 16-character random authentication token.
-- **Interactive Management Console**: Clean numerical menu for status inspection, starting, stopping, restarting, log viewing, and uninstallation.
+- **Interactive Management Console**: Clean numerical menu for status inspection, starting, stopping, restarting, config editing, log viewing, and uninstallation.
 - **Global Management Shortcut**: Automatically registers the `frps-admin` command for convenient system-wide management.
 - **Zero Emoji Style**: Adheres strictly to clean UNIX terminal formatting with zero emojis.
 
@@ -58,8 +59,9 @@ Console preview:
   3. 停止服务 / Stop Service
   4. 查看实时日志 / View Recent Logs
   5. 查看配置文件 / View Configuration File
-  6. 重新安装与更新 / Reinstall or Update FRPS
-  7. 卸载 FRPS / Uninstall FRPS
+  6. 修改配置文件 / Edit Configuration File
+  7. 重新安装与更新 / Reinstall or Update FRPS
+  8. 卸载 FRPS / Uninstall FRPS
   0. 退出 / Exit
 ============================================================
 ```
@@ -77,6 +79,7 @@ sudo frps-admin restart     # Restart the service
 sudo frps-admin status      # Check current service status
 sudo frps-admin logs        # Stream real-time logs
 sudo frps-admin config      # Display current configuration
+sudo frps-admin edit        # Edit configuration and reload
 sudo frps-admin uninstall   # Completely uninstall FRPS
 ```
 
